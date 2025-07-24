@@ -22,9 +22,7 @@ export default function AdminLogin() {
       // Verify admin credentials against database
       const adminAccounts = await blink.db.adminAccounts.list({
         where: { 
-          email: email,
-          passwordHash: password,
-          isActive: "1"
+          email: email
         }
       })
 
@@ -34,8 +32,16 @@ export default function AdminLogin() {
         return
       }
 
-      // Update last login
       const admin = adminAccounts[0]
+      
+      // Check if admin is active and password matches
+      if (Number(admin.isActive) === 0 || admin.passwordHash !== password) {
+        setError('Invalid admin credentials. Please check your email and password.')
+        setIsLoading(false)
+        return
+      }
+
+      // Update last login
       await blink.db.adminAccounts.update(admin.id, {
         lastLogin: new Date().toISOString()
       })
